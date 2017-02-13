@@ -1,0 +1,31 @@
+- Fresh install of ubuntu
+- Download sane backends 1.0.25 source code
+	Change line in backend/epson2-ops.c according to scanomatic wiki to include V800 model with second hidden TPU mode
+		The line may look like:
+			if (e2_model(s, "GT-X800") || e2_model(s, "GT-X900") ) {
+		And in the case of the Epson V800, which has the name GT-X980 you would need to change the line to:
+			if (e2_model(s, "GT-X800") || e2_model(s, "GT-X900") || e2_model(s, "GT-X980")) {
+	install required dev packages according to CompileSaneFromScratch entry in ubuntu wiki
+		sudo apt-get install libusb-dev build-essential libsane-dev
+		sudo apt-get install libavahi-client-dev libavahi-glib-dev
+	./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --sysconfdir=/etc --localstatedir=/var --enable-avahi 
+	make; sudo make install
+- change /etc/sane.d/epson2.conf and /lib/udev/rules.d/40-libsane.rules according to scanomatic wiki
+	sudo gedit /lib/udev/rules.d/40-libsane.rules
+	Find the lines that say:
+	# Epson V700 | Epson V750 | Epson GT-X900                                                             
+	# Epson Perfection V700 Photo | Epson Perfection V750 Photo                                           
+	ATTRS{idVendor}=="04b8", ATTRS{idProduct}=="012c", ENV{libsane_matched}="yes"
+	And after that add
+		# Epson V800 | GT-X980                                                                                
+	ATTRS{idVendor}=="04b8", ATTRS{idProduct}=="0151", ENV{libsane_matched}="yes"
+		sudo gedit /etc/sane.d/epson2.conf
+		A bit down there's a line with only usb and below that a couple of commented lines:
+		# For libusb support for unknown scanners use the following command
+		# usb <product ID> <device ID>
+		# e.g.:
+		# usb 0x4b8 0x110
+		Below that we add the line:
+		usb 0x4b8 0x151
+		
+- sudo scanimage -L to check that the hidden TPU8x10 mode shows up.

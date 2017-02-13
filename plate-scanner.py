@@ -1,13 +1,20 @@
 import sys
 import time
 import numpy as np
+from subprocess import check_output
+from os import mkdir
 #import tqdm
 
 manualStr = '''
 Welcome. This script will help you acquire images in batches using the custom set-up implemented by Stephan and John.
 '''
 
-scriptParams = []
+#Additional parameters, change if you know what you are doing
+geometries = ['1800x2700+310+130', 
+'1800x2700+2550+130',
+'1800x2700+310+3290',
+'1800x2700+2550+3290',
+]
 
 if len(sys.argv) > 1:
     if sys.argv[1] == '-help':
@@ -56,26 +63,33 @@ while not postfix:
         postfix = None
         print 'Invalid input'
         
-saveRaw = None
-while saveRaw==None:
-    try:
-        i = raw_input('Do you want to save the raw, uncropped scans? Please type y or n. > ')
-        if i=='y':
-            saveRaw = True
-        if i=='n':
-            saveRaw = False
-        else:
-            raise Exception
-    except Exception:
-        saveRaw = None
-        print 'Invalid input'
+if False:#Deprecated, remove eventually
+	saveRaw = None
+	while saveRaw==None:
+	    try:
+		i = raw_input('Do you want to save the raw, uncropped scans? Please type y or n. > ')
+		if i=='y':
+		    saveRaw = True
+		if i=='n':
+		    saveRaw = False
+		else:
+		    raise Exception
+	    except Exception:
+		saveRaw = None
+		print 'Invalid input'
 
 print '''Ready to start scanning using the following parameters:
 Number of plates to scan: %i
 Start numbering at: %i
 Prefix: %s
 Postfix: %s
-save raw scans?: %s'''%(n, plateStart, prefix, postfix, str(saveRaw))
+'''%(n, plateStart, prefix, postfix)
+
+wdir = '%s_%s/'%(prefix,postfix)
+mkdir(wdir)
+rdir = wdir + 'raw_scans/'
+mkdir(rdir)
+print 'Successfully created directories. Please make sure the scanner is turned on.'
 
 nscans = int(np.ceil(n/4.0))
 labels = map(str, range(plateStart, plateStart+n))
@@ -88,19 +102,23 @@ for i in range(1, nscans+1):
     ready = None
     while not ready:
         try:
-            i = raw_input('If ready, enter y to start scan')
-            if i == 'y':
+            inp = raw_input('If ready, enter y to start scan > ')
+            if inp == 'y':
                 ready = True
             else:
                 raise Exception
         except Exception:
             print 'Invalid input'
     
-    #scan
+    cmdStr = 'scanimage --source TPU8x10 --mode Gray --resolution 600 --format=tiff  > %s%s_rawscan%s_%s.tiff'%(rdir, prefix, i, postfix)
+    check_output(cmdStr, shell=True)
 
-print 'Done with scanning. Please wait a few seconds while all your images are being cropped'
-
-
+    for plate in range(4):
+        plateNr = (i-1)*4+plate
+        if plateNr < n:
+            cmdStr = 'convert %s%s_rawscan%s_%s.tiff -crop %s +repage %s%s_%i_%s.tiff'%(rdir, prefix, i, postfix, geometries[plate], wdir, prefix, plateNr+plateStart, postfix)
+            check_output(cmdStr, shell=True)
+        
 print 'Done'
     
     
