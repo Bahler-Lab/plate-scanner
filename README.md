@@ -6,9 +6,11 @@ To use the NanoDrop, reboot/turn on the laptop and select Windows in boot menu.
 
 To scan plates:
 1. Boot Ubuntu and log in
-2. Open the file manager and navigate to the folder in which you want to save your images. This can be a folder on the server.
-The script will create a sub-folder that begins with the current date to save all your images.
+
+2. Open the file manager and navigate to the folder in which you want to save your images. The script will create a sub-folder that begins with the current date to save all your images. 
+
 3. Right click and select 'Open in Terminal'
+
 4. Type in 'plate-scanner' and follow the on-screen instructions. 
 
 Tips:
