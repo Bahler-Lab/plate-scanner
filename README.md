@@ -5,7 +5,8 @@ images are acquired using SANE and then cropped using ImageMagick.
 To use the NanoDrop, reboot/turn on the laptop and select Windows in boot menu.
 
 To scan plates:
-1. Boot Ubuntu and log in
+
+1. Boot Ubuntu and log in using standard password bAh1rer1.b
 
 2. Open the file manager and navigate to the folder in which you want to save your images. The script will create a sub-folder that begins with the current date to save all your images. 
 
