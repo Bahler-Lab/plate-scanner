@@ -116,7 +116,7 @@ for i in range(1, nscans+1):
     for plate in range(4):
         plateNr = (i-1)*4+plate
         if plateNr < n:
-            cmdStr = 'convert %s%s_rawscan%s_%s.tiff -crop %s +repage %s%s_%i_%s.tiff'%(rdir, prefix, i, postfix, geometries[plate], wdir, prefix, plateNr+plateStart, postfix)
+            cmdStr = 'convert %s%s_rawscan%s_%s.tiff -crop %s +repage -rotate 90 %s%s_%i_%s.tiff'%(rdir, prefix, i, postfix, geometries[plate], wdir, prefix, plateNr+plateStart, postfix)
             check_output(cmdStr, shell=True)
         
 print 'Done'
