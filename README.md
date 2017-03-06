@@ -20,3 +20,6 @@ Tips:
 - The folder raw_scans will contain the original scans, please check these if you suspect that the automatic numbering is wrong.
 - Press Ctr+C at any time to terminate the program
 - The program will terminate and you have to start from the beginning if you try to create a folder with the same postfix on the same day. 
+- Currently available fixtures:
+    pp1 -> For Singer PlusPlates, bottom down, lids off
+    more to follow soon...

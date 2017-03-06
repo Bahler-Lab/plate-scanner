@@ -1,24 +1,13 @@
-import sys
 import time
 import numpy as np
 from subprocess import check_output
 from os import mkdir
-#import tqdm
 
-manualStr = '''
-Welcome. This script will help you acquire images in batches using the custom set-up implemented by Stephan and John.
-'''
 
 #Additional parameters, change if you know what you are doing
-geometries = ['1800x2700+310+130', 
-'1800x2700+2550+130',
-'1800x2700+310+3290',
-'1800x2700+2550+3290',
-]
+geometries = {'pp1':['1760x2760+245+50', '1760x2760+2410+50', '1760x2760+2410+3205', '1760x2760+245+3205'],
+'null':[None, None, None, None]}
 
-if len(sys.argv) > 1:
-    if sys.argv[1] == '-help':
-        print manualStr
 
 print '''Welcome. This script will help you acquire images in batches using the custom set-up implemented by Stephan and John.
 Please enter the required information below.'''
@@ -62,21 +51,16 @@ while not postfix:
     except Exception:
         postfix = None
         print 'Invalid input'
-        
-if False:#Deprecated, remove eventually
-	saveRaw = None
-	while saveRaw==None:
-	    try:
-		i = raw_input('Do you want to save the raw, uncropped scans? Please type y or n. > ')
-		if i=='y':
-		    saveRaw = True
-		if i=='n':
-		    saveRaw = False
-		else:
-		    raise Exception
-	    except Exception:
-		saveRaw = None
-		print 'Invalid input'
+
+fixture = None
+while not fixture:
+    try:
+        fixture = raw_input('Please enter the ID of the fixture your are using > ')
+        assert fixture in list(geometries)
+    except Exception:
+        fixture = None
+        print 'Invalid input, must be one of: '+'|'.join(list(geometries))
+
 
 print '''Ready to start scanning using the following parameters:
 Number of plates to scan: %i
@@ -95,7 +79,7 @@ nscans = int(np.ceil(n/4.0))
 labels = map(str, range(plateStart, plateStart+n))
 labels += ['empty', 'empty', 'empty']#Max number of emtpy bays in last scan
 for i in range(1, nscans+1):
-    print 'Preparing to for scan %i out of %i'%(i,nscans)
+    print 'Preparing for scan %i out of %i'%(i,nscans)
     print 'Please load the scanner as follows:'
     print 'Bay 1 -> Plate %s, Bay 2 -> Plate %s, Bay 3 -> Plate %s, Bay 4 -> Plate %s'%tuple(labels[(i-1)*4:(i-1)*4+4])
     
@@ -116,7 +100,7 @@ for i in range(1, nscans+1):
     for plate in range(4):
         plateNr = (i-1)*4+plate
         if plateNr < n:
-            cmdStr = 'convert %s%s_rawscan%s_%s.tiff -crop %s +repage -rotate 90 %s%s_%i_%s.tiff'%(rdir, prefix, i, postfix, geometries[plate], wdir, prefix, plateNr+plateStart, postfix)
+            cmdStr = 'convert %s%s_rawscan%s_%s.tiff -crop %s +repage -rotate 90 -flop %s%s_%i_%s.jpg'%(rdir, prefix, i, postfix, geometries[fixture][plate], wdir, prefix, plateNr+plateStart, postfix)
             check_output(cmdStr, shell=True)
         
 print 'Done'
