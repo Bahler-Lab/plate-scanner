@@ -3,6 +3,7 @@ import argparse
 from warnings import warn
 import sys
 import time
+from subprocess import check_output
 from os import mkdir
 
 #Additional parameters, change if you know what you are doing
@@ -13,8 +14,8 @@ geometries = {'pp1':['1760x2760+245+50', '1760x2760+2410+50', '1760x2760+2410+32
 'pp2':['1759x2691+352+124', '1757x2687+2572+149', '1757x2687+356+3313', '1757x2687+2595+3313'],
 'som3_edge':['2034x2865+84+0', '2034x2865+2292+104', '2034x2865+97+3135', '2034x2865+2317+3135'],
 'som3_noEdge_sameGrid' : ['1726x2603+257+127', '1726x2603+2434+127', '1726x2603+257+3274', '1726x2603+2434+3274'],
+'maria' : ['1726x2603+257+127', '1726x2603+2434+127', '1726x2603+257+3274', '1726x2603+2434+3274'],
 'null':[None, None, None, None]}
-
 
 
 def scan_batch(n, plateStart, prefix, postfix, fixture, resoltution, geometries, scanner):
@@ -51,7 +52,7 @@ def scan_batch(n, plateStart, prefix, postfix, fixture, resoltution, geometries,
             except Exception:
                 print 'Invalid input'
 
-        cmdStr = 'scanimage --source TPU8x10 --mode Gray --resolution %i --format=tiff  > %s%s_rawscan%s_%s.tiff'%(resolution, rdir, prefix, i, postfix)
+        cmdStr = 'scanimage --source TPU8x10 --mode Gray --resolution %i --format=tiff --device-name=%s > %s%s_rawscan%s_%s.tiff'%(resolution, scanner, rdir, prefix, i, postfix)
         check_output(cmdStr, shell=True)
 
         for plate in range(ppscan):
@@ -65,8 +66,15 @@ def scan_batch(n, plateStart, prefix, postfix, fixture, resoltution, geometries,
 
 
 def find_scanner(scanner_index):
+    print 'Searching for scanners.'
     scanner_list = check_output('scanimage -L', shell=True)
-    return scanner_list
+    scanner_list = [s for s in scanner_list.split('\n') if not s.strip()=='']
+    scanner_list = [s.split()[1][1:-1] for s in scanner_list]
+    print scanner_list
+    scanner = scanner_list[scanner_index]
+
+    print 'Using scanner %s'%scanner
+    return scanner
 
 
 def interactive_parse():
@@ -137,7 +145,7 @@ if __name__ == '__main__':
     #Set up parsing of command line arguments with argparse
     parser = argparse.ArgumentParser(description='Welcome to scanplates. Written by stephan.kamrad@crick.ac.uk and maintained at https://github.com/Bahler-Lab/scanplates.')
 
-    parser.add_argument('--interactive', action='store_true', help='Use interactive mode for setting arguments.')
+    parser.add_argument('-i', action='store_true', help='Use interactive mode for setting arguments.')
     
     parser.add_argument('--nplates', type=int, default=100, help='Number of plates to scan. This defaults to 100 and the script can be terminated by Ctr+C when done.')
     parser.add_argument('--start', type=int, default=1, help='Where to start numbering from.')
@@ -149,7 +157,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    if args.interactive:
+    if args.i:
         n, plateStart, prefix, postfix, fixture = interactive_parse()
         
     else: 
