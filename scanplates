@@ -1,0 +1,165 @@
+#!/usr/bin/env python
+import argparse
+from warnings import warn
+import sys
+import time
+from os import mkdir
+
+#Additional parameters, change if you know what you are doing
+geometries = {'pp1':['1760x2760+245+50', '1760x2760+2410+50', '1760x2760+2410+3205', '1760x2760+245+3205'],
+'som2':['1760x2627+2311+124','1760x2627+147+133', '1760x2627+2333+3280', '1760x2627+160+3293'],
+'square1':['2868x2856+1044+168', '2880x2676+1068+3324'],
+'petrie1':['2112x2112+0+384', '2112x2112+2232+384', '2112x2112+2232+3504', '2112x2112+0+3504'],
+'pp2':['1759x2691+352+124', '1757x2687+2572+149', '1757x2687+356+3313', '1757x2687+2595+3313'],
+'som3_edge':['2034x2865+84+0', '2034x2865+2292+104', '2034x2865+97+3135', '2034x2865+2317+3135'],
+'som3_noEdge_sameGrid' : ['1726x2603+257+127', '1726x2603+2434+127', '1726x2603+257+3274', '1726x2603+2434+3274'],
+'null':[None, None, None, None]}
+
+
+
+def scan_batch(n, plateStart, prefix, postfix, fixture, resoltution, geometries, scanner):
+    ppscan = len(geometries[fixture])#plates per scan
+    
+    #Get geometry string and adapt to resolution
+    geometry = geometries[fixture][plate]
+    for g in geometry:
+        g = 'x'.join(map(lambda x: int(x)*(resoltution/600.0)), g.split('x'))
+        
+    wdir = '%s_%s/'%(prefix,postfix)
+    mkdir(wdir)
+    rdir = wdir + 'raw_scans/'
+    mkdir(rdir)
+    print 'Successfully created directories. Please make sure the scanner is turned on.'
+
+    nscans = int(np.ceil(n/float(ppscan)))
+    labels = map(str, range(plateStart, plateStart+n))
+    labels += ['empty']*(ppscan-1)#Max number of emtpy bays in last scan
+    for i in range(1, nscans+1):
+        print 'Preparing for scan %i out of %i'%(i,nscans)
+        print 'Please load the scanner as follows:'
+        for q in range(1,ppscan+1):
+            print 'Bay %i -> Plate %s'%(q, labels[(i-1)*ppscan+(q-1)])
+
+        ready = None
+        while not ready:
+            try:
+                inp = raw_input('If ready, enter y to start scan > ')
+                if inp == 'y':
+                    ready = True
+                else:
+                    raise Exception
+            except Exception:
+                print 'Invalid input'
+
+        cmdStr = 'scanimage --source TPU8x10 --mode Gray --resolution %i --format=tiff  > %s%s_rawscan%s_%s.tiff'%(resolution, rdir, prefix, i, postfix)
+        check_output(cmdStr, shell=True)
+
+        for plate in range(ppscan):
+            plateNr = (i-1)*ppscan+plate
+            if plateNr < n:
+                cmdStr = 'convert %s%s_rawscan%s_%s.tiff -crop %s +repage -rotate 90 -flop %s%s_%i_%s.jpg'%(rdir, prefix, i, postfix, geometry, wdir, prefix, plateNr+plateStart, postfix)
+                check_output(cmdStr, shell=True)
+                print cmdStr
+
+    print 'Done'
+
+
+def find_scanner(scanner_index):
+    scanner_list = check_output('scanimage -L', shell=True)
+    return scanner_list
+
+
+def interactive_parse():
+    print '''Welcome. This script will help you acquire images in batches using the custom set-up implemented by Stephan and John.
+    Please enter the required information below.'''
+
+    n=None
+    while not n:
+        try:
+            n = int(raw_input('How many plates will you need to scan? > '))
+            assert n > 0
+        except Exception:
+            n = None
+            print 'Invalid input'
+
+    plateStart = None
+    while plateStart==None:
+        try:
+            plateStart = int(raw_input('Set the index number for the first image. This should normally be 0 or 1 but might be different. > '))
+        except Exception:
+            plateStart = None
+            print 'Invalid input'
+
+    prefix = None
+    while not prefix:
+        try:
+            i = raw_input('Plate image files will be prepended by the current date YYYYMMDD by default. I believe the current date is %s. Enter y to accept this or define another prefix. The prefix should not contain any spaces or weird characters. > '%time.strftime('%Y%m%d'))
+            if i=='y':
+                prefix = time.strftime('%Y%m%d')
+            else:
+                prefix = i
+                assert ' ' not in prefix
+                print 'Successfully defined custom prefix: '+prefix
+        except Exception:
+            prefix = None
+            print 'Invalid input'
+
+    postfix = None
+    while not postfix:
+        try:
+            postfix = raw_input('Set the postfix for your image file names. This should normally be your name or an ID of the experiment you are doing. The postfix should not contain any spaces or weird characters. > ')
+            assert ' ' not in postfix
+        except Exception:
+            postfix = None
+            print 'Invalid input'
+
+    fixture = None
+    while not fixture:
+        try:
+            fixture = raw_input('Please enter the ID of the fixture your are using > ')
+            assert fixture in list(geometries)
+        except Exception:
+            fixture = None
+            print 'Invalid input, must be one of: '+'|'.join(list(geometries))
+
+
+    print '''Ready to start scanning using the following parameters:
+    Number of plates to scan: %i
+    Start numbering at: %i
+    Prefix: %s
+    Postfix: %s
+    Fixture: %s
+    '''%(n, plateStart, prefix, postfix, fixture)
+
+    return n, plateStart, prefix, postfix, fixture
+
+if __name__ == '__main__':
+    #Set up parsing of command line arguments with argparse
+    parser = argparse.ArgumentParser(description='Welcome to scanplates. Written by stephan.kamrad@crick.ac.uk and maintained at https://github.com/Bahler-Lab/scanplates.')
+
+    parser.add_argument('--interactive', action='store_true', help='Use interactive mode for setting arguments.')
+    
+    parser.add_argument('--nplates', type=int, default=100, help='Number of plates to scan. This defaults to 100 and the script can be terminated by Ctr+C when done.')
+    parser.add_argument('--start', type=int, default=1, help='Where to start numbering from.')
+    parser.add_argument('--prefix', type=str, default=time.strftime('%Y%m%d'), help='Name prefix for output files. The default is the current date YYYYMMDD.')
+    parser.add_argument('--postfix', type=str, default='', help='Name postfix for output files.')
+    parser.add_argument('--fixture', type=str, help='ID of the fixture you are using.')
+    parser.add_argument('--resolution', choices=[150,300,600,900,1200], type=int, default=600, help='Resolution for scanning in dpi. Default is 600.')
+    parser.add_argument('--scanner', choices=[1,2,3], type=int, default=1, help='Which scanner to use. Scanners are not uniquely identified and may switch when turned off/unplugged.')
+
+    args = parser.parse_args()
+    
+    if args.interactive:
+        n, plateStart, prefix, postfix, fixture = interactive_parse()
+        
+    else: 
+        n = args.nplates
+        plateStart = args.start
+        prefix = args.prefix
+        postfix = args.postfix
+        fixture = args.fixture
+        if fixture is None or fixture not in geometries:
+            raise ValueError('Invalid fixture. Please choose one of the following: %s'%str(list(geometries)))
+    scanner = find_scanner(args.scanner)
+    
+    scan_batch(n, plateStart, prefix, postfix, fixture, args.resoltution, geometries, scanner)
