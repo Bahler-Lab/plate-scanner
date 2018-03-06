@@ -5,6 +5,7 @@ import sys
 import time
 from subprocess import check_output
 from os import mkdir
+import numpy as np
 
 #Additional parameters, change if you know what you are doing
 geometries = {'pp1':['1760x2760+245+50', '1760x2760+2410+50', '1760x2760+2410+3205', '1760x2760+245+3205'],
@@ -18,14 +19,21 @@ geometries = {'pp1':['1760x2760+245+50', '1760x2760+2410+50', '1760x2760+2410+32
 'null':[None, None, None, None]}
 
 
-def scan_batch(n, plateStart, prefix, postfix, fixture, resoltution, geometries, scanner):
+def scan_batch(n, plateStart, prefix, postfix, fixture, resolution, geometries, scanner):
     ppscan = len(geometries[fixture])#plates per scan
     
     #Get geometry string and adapt to resolution
-    geometry = geometries[fixture][plate]
+    geometry = geometries[fixture]
+    
+    print 'Loaded geometry settings for fixture %s: '%fixture + str(geometry)
+    geometry_temp = []
     for g in geometry:
-        g = 'x'.join(map(lambda x: int(x)*(resoltution/600.0)), g.split('x'))
-        
+        glist = map(lambda x: str(int(int(x)*(resolution/600.0))), g.replace('+', 'x').split('x'))
+        geometry_temp.append(glist[0] + 'x' + glist[1] + '+' + glist[2] + '+' + glist[3])
+
+    print 'Geometry settings scaled to resolution: ' + str(geometry_temp)
+    geometry = geometry_temp
+
     wdir = '%s_%s/'%(prefix,postfix)
     mkdir(wdir)
     rdir = wdir + 'raw_scans/'
@@ -58,9 +66,9 @@ def scan_batch(n, plateStart, prefix, postfix, fixture, resoltution, geometries,
         for plate in range(ppscan):
             plateNr = (i-1)*ppscan+plate
             if plateNr < n:
-                cmdStr = 'convert %s%s_rawscan%s_%s.tiff -crop %s +repage -rotate 90 -flop %s%s_%i_%s.jpg'%(rdir, prefix, i, postfix, geometry, wdir, prefix, plateNr+plateStart, postfix)
+                cmdStr = 'convert %s%s_rawscan%s_%s.tiff -crop %s +repage -rotate 90 -flop %s%s_%i_%s.jpg'%(rdir, prefix, i, postfix, geometry[plate], wdir, prefix, plateNr+plateStart, postfix)
                 check_output(cmdStr, shell=True)
-                print cmdStr
+
 
     print 'Done'
 
@@ -70,8 +78,8 @@ def find_scanner(scanner_index):
     scanner_list = check_output('scanimage -L', shell=True)
     scanner_list = [s for s in scanner_list.split('\n') if not s.strip()=='']
     scanner_list = [s.split()[1][1:-1] for s in scanner_list]
-    print scanner_list
-    scanner = scanner_list[scanner_index]
+    print 'Scanners found: ' + str(scanner_list)
+    scanner = scanner_list[scanner_index-1]
 
     print 'Using scanner %s'%scanner
     return scanner
@@ -148,7 +156,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', action='store_true', help='Use interactive mode for setting arguments.')
     
     parser.add_argument('--nplates', type=int, default=100, help='Number of plates to scan. This defaults to 100 and the script can be terminated by Ctr+C when done.')
-    parser.add_argument('--start', type=int, default=1, help='Where to start numbering from.')
+    parser.add_argument('--start', type=int, default=1, help='Where to start numbering from. Defaults to 1.')
     parser.add_argument('--prefix', type=str, default=time.strftime('%Y%m%d'), help='Name prefix for output files. The default is the current date YYYYMMDD.')
     parser.add_argument('--postfix', type=str, default='', help='Name postfix for output files.')
     parser.add_argument('--fixture', type=str, help='ID of the fixture you are using.')
@@ -170,4 +178,4 @@ if __name__ == '__main__':
             raise ValueError('Invalid fixture. Please choose one of the following: %s'%str(list(geometries)))
     scanner = find_scanner(args.scanner)
     
-    scan_batch(n, plateStart, prefix, postfix, fixture, args.resoltution, geometries, scanner)
+    scan_batch(n, plateStart, prefix, postfix, fixture, args.resolution, geometries, scanner)
