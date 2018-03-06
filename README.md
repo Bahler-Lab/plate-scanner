@@ -12,7 +12,32 @@ To scan plates:
 
 3. Right click and select 'Open in Terminal'
 
-4. Type in 'plate-scanner' and follow the on-screen instructions. 
+4. Run scanplates with the options as detailed below. If you would like to use the old, interactive interface, run scanplates -i.
+
+usage: scanplates [-h] [-i] [--nplates NPLATES] [--start START]
+                  [--prefix PREFIX] [--postfix POSTFIX] [--fixture FIXTURE]
+                  [--resolution {150,300,600,900,1200}] [--scanner {1,2,3}]
+
+Welcome to scanplates. Written by stephan.kamrad@crick.ac.uk and maintained at
+https://github.com/Bahler-Lab/scanplates.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i                    Use interactive mode for setting arguments.
+  --nplates NPLATES     Number of plates to scan. This defaults to 100 and the
+                        script can be terminated by Ctr+C when done.
+  --start START         Where to start numbering from. Defaults to 1.
+  --prefix PREFIX       Name prefix for output files. The default is the
+                        current date YYYYMMDD.
+  --postfix POSTFIX     Name postfix for output files. Defaults to empty string.
+  --fixture FIXTURE     ID of the fixture you are using.
+  --resolution {150,300,600,900,1200}
+                        Resolution for scanning in dpi. Default is 600.
+  --scanner {1,2,3}     Which scanner to use. Scanners are not uniquely
+                        identified and may switch when turned off/unplugged.This option does not need to be set when only one scanner is connected.
+
+
+All arguments except the fixture now have default values and are optional.
 
 Tips:
 - Wipe off any condensation from your plate bottoms. Remove lids before scanning.
