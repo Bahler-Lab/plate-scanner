@@ -14,6 +14,7 @@ To scan plates:
 
 4. Run scanplates with the options as detailed below. If you would like to use the old, interactive interface, run scanplates -i.
 
+```
 usage: scanplates [-h] [-i] [--nplates NPLATES] [--start START]
                   [--prefix PREFIX] [--postfix POSTFIX] [--fixture FIXTURE]
                   [--resolution {150,300,600,900,1200}] [--scanner {1,2,3}]
@@ -36,6 +37,7 @@ optional arguments:
   --scanner {1,2,3}     Which scanner to use. Scanners are not uniquely
                         identified and may switch when turned off/unplugged.This option does not need to be set when only one scanner is connected.
 
+```
 
 All arguments except the fixture now have default values and are optional.
 
