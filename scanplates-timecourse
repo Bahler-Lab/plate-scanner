@@ -64,7 +64,7 @@ def scan_batch(nscans, interval, prefix, postfix, fixture, resolution, geometrie
 
         log.write(str(datetime.now()) + ' - Scan %i completed sucessfully\n'%i)
         log.flush()
-        timepoints.write(str(((datetime.now()).total_seconds() - starttime))/(60*60) + '\n')
+        timepoints.write(str((datetime.now().total_seconds() - starttime)/(60*60)) + '\n')
         timepoints.flush()
         time.sleep(interval*60)#Convert to seconds
         
