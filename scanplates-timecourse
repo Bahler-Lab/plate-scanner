@@ -92,16 +92,11 @@ if __name__ == '__main__':
     parser.add_argument('--mode', choices=['Gray', 'Color'], type=str, default='Gray', help='Which color mode to use for scanning. Defaults to Gray.')
 
     args = parser.parse_args()
-    
-    ntimepoints = args.nscans
-    interval = args.interval
-    prefix = args.prefix
-    postfix = args.postfix
+        
     fixture = args.fixture
     if fixture is None or fixture not in geometries:
         raise ValueError('Invalid fixture. Please choose one of the following: %s'%str(list(geometries)))
-    mode = args.mode
         
     scanner = find_scanner(args.scanner)
     
-    scan_batch(nscans, interval, prefix, postfix, fixture, args.resolution, geometries, scanner, mode)
+    scan_batch(args.nscans, args.interval, args.prefix, args.postfix, fixture, args.resolution, geometries, scanner, args.mode)
