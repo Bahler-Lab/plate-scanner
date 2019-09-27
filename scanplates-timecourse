@@ -45,7 +45,7 @@ def scan_batch(nscans, interval, prefix, postfix, fixture, resolution, geometrie
     
     #Open log
     log = open(wdir+'/scanlog.txt', 'w')
-    log.write(str(datetime.now()) + ' - Started scanplates-timecourse with the following parameters: ' + ' ,'.join([nscans, interval, prefix, postfix, fixture, resolution, geometries, scanner, mode]))
+    log.write(str(datetime.now()) + ' - Started scanplates-timecourse with the following parameters: ' + ' ,'.join(map(str, [nscans, interval, prefix, postfix, fixture, resolution, geometries, scanner, mode])))
     
     print 'Successfully created directories.'
 
