@@ -16,6 +16,7 @@ geometries = {'pp1':['1760x2760+245+50', '1760x2760+2410+50', '1760x2760+2410+32
 'som3_edge':['2034x2865+84+0', '2034x2865+2292+0', '2034x2865+97+3135', '2034x2865+2317+3135'],
 'som3_noEdge_sameGrid' : ['1726x2603+257+127', '1726x2603+2434+127', '1726x2603+257+3274', '1726x2603+2434+3274'],
 'maria' : ['1726x2603+257+127', '1726x2603+2434+127', '1726x2603+257+3274', '1726x2603+2434+3274'],
+'som3_color':['1660x2325+418+636', '1660x2325+2594+636', '1660x2325+418+3784', '1660x2325+2594+3784'],
 'null':[None, None, None, None]}
 
 
@@ -187,7 +188,9 @@ if __name__ == '__main__':
         if fixture is None or fixture not in geometries:
             raise ValueError('Invalid fixture. Please choose one of the following: %s'%str(list(geometries)))
         mode = args.mode
-        
+        if (mode=='Color') and (fixture!='som3_color'):
+            raise ValueError('Invalid fixture. Color mode only allowed with --fixture som3_color.')
+            
     scanner = find_scanner(args.scanner)
     
     scan_batch(n, plateStart, prefix, postfix, fixture, args.resolution, geometries, scanner, mode)
